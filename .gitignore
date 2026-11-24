@@ -1,0 +1,39 @@
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ===== Vivado (keep sources + .tcl build scripts, ignore generated output) =====
+.Xil/
+*.jou
+*.log
+*.str
+*.pb
+*.wdb
+webtalk*
+usage_statistics_webtalk.*
+xsim.dir/
+*.cache/
+*.runs/
+*.sim/
+*.hw/
+*.gen/
+*.ip_user_files/
+vivado/build/
+
+# ===== MATLAB =====
+*.asv
+
+# ===== Editors =====
+.vscode/
+.idea/
+*.swp
