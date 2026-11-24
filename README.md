@@ -10,6 +10,10 @@
 | **Platform** | iWave iW-RainboW-G30 (AMD Zynq UltraScale+ MPSoC) |
 | **Code** | N = 1024, K = 512 (rate ½), BPSK over AWGN, SC decoding |
 
+<p align="center">
+  <img src="docs/images/polar-codes.gif" alt="Polar codes in four steps: channel polarization, encoding, SC decoding and BER/FER" width="880">
+</p>
+
 > This README is the project's working plan (v3), converted from the original Hebrew document.
 
 ---
