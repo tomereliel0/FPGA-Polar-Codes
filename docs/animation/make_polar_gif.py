@@ -23,9 +23,12 @@ FPS = 12
 W, H = 100.0, 56.25                      # drawing coordinates (16:9)
 FIG = (8.8, 4.95); DPI = 100             # -> 880 x 495 px
 
-BG, PANEL, FG, MUTED, GRID = "#0d1117", "#161b22", "#e6edf3", "#8b949e", "#30363d"
-GREEN, RED, BLUE, AMBER, PURPLE = "#3fb950", "#f85149", "#58a6ff", "#d29922", "#bc8cff"
-CMAP = LinearSegmentedColormap.from_list("pol", [RED, AMBER, GREEN])
+# light "white / blue" theme.  Semantic names: GREEN = information / good, RED = frozen / bad (slate),
+# AMBER = active highlight, PURPLE = partial sums, ERR = bit flipped by noise.
+BG, PANEL, FG, MUTED, GRID = "#ffffff", "#f3f7fc", "#0b1f3a", "#5f7189", "#d3deeb"
+GREEN, RED, BLUE, AMBER, PURPLE = "#0b63ce", "#8597ad", "#1f6feb", "#0ea5e9", "#123a7a"
+NAVY, MID, ERR = "#123a7a", "#6ea8f7", "#e5534b"
+CMAP = LinearSegmentedColormap.from_list("pol", ["#c5d0dc", MID, GREEN])
 STEPS = ["1  Polarization", "2  Encoding", "3  SC decoding", "4  BER / FER"]
 
 
@@ -43,9 +46,11 @@ def new_canvas():
     return fig, ax
 
 
-def header(ax, step, title, subtitle):
-    x0, pw, gap = 3.0, 22.0, 1.6
-    for i, s in enumerate(STEPS):
+def header(ax, step, title, subtitle, steps=None):
+    steps = steps or STEPS
+    gap = 1.6
+    x0, pw = 3.0, (94.0 - gap * (len(steps) - 1)) / len(steps)
+    for i, s in enumerate(steps):
         active = i == step
         done = i < step
         fc = BLUE if active else (PANEL)
@@ -153,7 +158,7 @@ def scene_polar(fig, ax, k, K):
     good = np.mean(ys > 0.9) * 100; bad = np.mean(ys < 0.1) * 100
     ax.text(68, 32.5, f"I > 0.9 :  {good:4.1f} %", fontsize=10, color=GREEN, family="monospace")
     ax.text(68, 29.3, f"I < 0.1 :  {bad:4.1f} %", fontsize=10, color=RED, family="monospace")
-    ax.text(68, 26.1, f"in between: {100 - good - bad:4.1f} %", fontsize=10, color=AMBER, family="monospace")
+    ax.text(68, 26.1, f"in between: {100 - good - bad:4.1f} %", fontsize=10, color=MID, family="monospace")
     a2 = fig.add_axes([0.685, 0.13, 0.27, 0.27]); style_axes(a2)
     hist, edges = np.histogram(ys, bins=10, range=(0, 1))
     a2.bar((edges[:-1] + edges[1:]) / 2, hist / len(ys), width=0.09,
@@ -351,7 +356,7 @@ def scene_decode(fig, ax, k, K):
     last_kind = DEMO_EV[nev - 1][0] if nev > 0 else "show"
 
     ax.text(TREE_X0 + 0.5, 39.6, "channel LLRs  L = 2y/σ²", fontsize=8, color=MUTED, alpha=a_in)
-    ax.text(TREE_X0 + TREE_W - 0.5, 39.6, "red = bit flipped by the noise", fontsize=8, color=RED, alpha=a_in, ha="right")
+    ax.text(TREE_X0 + TREE_W - 0.5, 39.6, "red = bit flipped by the noise", fontsize=8, color=ERR, alpha=a_in, ha="right")
     # edges
     for (d, kidx), (Lv, op) in shown.items():
         if d == 0:
@@ -387,7 +392,7 @@ def scene_decode(fig, ax, k, K):
             xx = cx - w / 2 + (i + 0.5) * w / n
             c = FG
             if d == 0 and i in DEMO_FLIPS:
-                c = RED
+                c = ERR
             ax.text(xx, cy, f"{v:+.1f}", ha="center", va="center", fontsize=8 if n > 1 else 7.5, color=c,
                     family="monospace", alpha=alpha, zorder=3, weight="bold" if (d == 0 and i in DEMO_FLIPS) else None)
         if (d, kidx) in betas:
@@ -488,14 +493,14 @@ def scene_ber(fig, ax, k, K):
     ex = np.linspace(0, 9.2, 200)
     a1.plot(ex, [qfunc(np.sqrt(2 * 10 ** (e / 10))) for e in ex], ls="--", color=MUTED, lw=1.2,
             label="uncoded BPSK (BER)")
-    a1.axvline(0.187, color=GREEN, ls=":", lw=1.2)
-    a1.text(0.3, 2.2e-6, "Shannon limit\nR=½ (0.19 dB)", color=GREEN, fontsize=6.5)
+    a1.axvline(0.187, color=MUTED, ls=":", lw=1.2)
+    a1.text(0.3, 2.2e-6, "Shannon limit\nR=½ (0.19 dB)", color=MUTED, fontsize=6.5)
     bx, by = interp_curve(xs, r["ber"], xmax)
     fx, fy = interp_curve(xs, r["fer"], xmax)
-    a1.plot(fx, fy, "-", color=AMBER, lw=2, label="polar SC — FER")
+    a1.plot(fx, fy, "-", color=NAVY, lw=2, label="polar SC — FER")
     a1.plot(bx, by, "-", color=BLUE, lw=2, label="polar SC — BER")
     mk = xs <= xmax + 1e-9
-    a1.plot(xs[mk][np.array(r["fer"])[mk] > 0], np.array(r["fer"])[mk][np.array(r["fer"])[mk] > 0], "o", color=AMBER, ms=3.5)
+    a1.plot(xs[mk][np.array(r["fer"])[mk] > 0], np.array(r["fer"])[mk][np.array(r["fer"])[mk] > 0], "o", color=NAVY, ms=3.5)
     a1.plot(xs[mk][np.array(r["ber"])[mk] > 0], np.array(r["ber"])[mk][np.array(r["ber"])[mk] > 0], "o", color=BLUE, ms=3.5)
     leg = a1.legend(fontsize=7, loc="upper right", facecolor=PANEL, edgecolor=GRID, labelcolor=FG)
     # right panel
